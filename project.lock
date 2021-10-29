@@ -1,0 +1,62 @@
+preprocess:
+  cmd: python -m spacy run preprocess
+  script:
+    - python scripts/preprocess.py assets/fashion_brands_training.jsonl corpus/fashion_brands_training.spacy
+    - python scripts/preprocess.py assets/fashion_brands_eval.jsonl corpus/fashion_brands_eval.spacy
+  deps:
+    - path: assets/fashion_brands_training.jsonl
+      md5: 63373dd656daa1fd3043ce166a59474c
+    - path: assets/fashion_brands_eval.jsonl
+      md5: 5113dc04e03f079525edd8df3f4f39e3
+    - path: scripts/preprocess.py
+      md5: a1a912a37d5a490951cd6b8f819652ab
+  outs:
+    - path: corpus/fashion_brands_training.spacy
+      md5: 091356654aa1746555cf8e601c245a66
+    - path: corpus/fashion_brands_eval.spacy
+      md5: 9ca87d0e0a330acdcfeec7360ba3495e
+  spacy_version: 3.1.0
+  spacy_git_version: 530b5d72f
+train:
+  cmd: python -m spacy run train
+  script:
+    - python -m spacy train configs/config.cfg --output training/ --paths.train corpus/fashion_brands_training.spacy
+      --paths.dev corpus/fashion_brands_eval.spacy
+  deps:
+    - path: corpus/fashion_brands_training.spacy
+      md5: 091356654aa1746555cf8e601c245a66
+    - path: corpus/fashion_brands_eval.spacy
+      md5: 9ca87d0e0a330acdcfeec7360ba3495e
+  outs:
+    - path: training/model-best
+      md5: 1624edeeff9d47f23798a9ecde2812f4
+  spacy_version: 3.1.0
+  spacy_git_version: 530b5d72f
+evaluate:
+  cmd: python -m spacy run evaluate
+  script:
+    - python -m spacy evaluate training/model-best corpus/fashion_brands_eval.spacy
+      --output training/metrics.json
+  deps:
+    - path: corpus/fashion_brands_eval.spacy
+      md5: 9ca87d0e0a330acdcfeec7360ba3495e
+    - path: training/model-best
+      md5: 1624edeeff9d47f23798a9ecde2812f4
+  outs:
+    - path: training/metrics.json
+      md5: 4085cf163ac7ccf13009cbd307739b96
+  spacy_version: 3.1.0
+  spacy_git_version: 530b5d72f
+package:
+  cmd: python -m spacy run package
+  script:
+    - python -m spacy package training/model-best packages --name ner_fashion --version
+      0.0.0 --force
+  deps:
+    - path: training/model-best
+      md5: 1624edeeff9d47f23798a9ecde2812f4
+  outs:
+    - path: packages/en_ner_fashion-0.0.0/dist/en_ner_fashion-0.0.0.tar.gz
+      md5: f8955c648a3e730a3b0211e519567f5f
+  spacy_version: 3.1.0
+  spacy_git_version: 530b5d72f
